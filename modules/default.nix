@@ -1,0 +1,5 @@
+{
+  imports = [
+    ./binary-cache.nix
+  ];
+}

@@ -1,21 +1,24 @@
 {
   pkgs,
+  inputs,
   secrets,
-  nix-shell-scripts,
   ...
 }:
 {
-  users.users.nixos = {
+  users.users.qeden = {
     isNormalUser = true;
-    initialHashedPassword = "";
+    initialPassword = "${secrets.defaultUserPassword}";
     extraGroups = [ "wheel" ];
   };
 
   security.sudo.wheelNeedsPassword = false;
 
   networking = {
+    hostName = "picache";
+
     networkmanager.enable = true;
     networkmanager.wifi.backend = "iwd";
+
     wireless.iwd = {
       enable = true;
       settings.General.EnableNetworkConfiguration = true;
@@ -28,8 +31,8 @@
   };
 
   environment.systemPackages = [
+    inputs.nix-shell-scripts.packages.${pkgs.system}.default
     pkgs.git
-    nix-shell-scripts.packages.${pkgs.system}.default
   ];
 
   documentation.nixos.enable = false;
@@ -39,4 +42,6 @@
     experimental-features = "nix-command flakes";
     auto-optimise-store = true;
   };
+
+  system.stateVersion = "25.05";
 }

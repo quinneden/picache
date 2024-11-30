@@ -12,15 +12,16 @@
       self,
       nixpkgs,
       nixos-generators,
-      nix-shell-scripts,
       ...
-    }:
+    }@inputs:
     let
       systems = [
         "aarch64-darwin"
         "aarch64-linux"
       ];
       forEachSystem = nixpkgs.lib.genAttrs systems;
+
+      secrets = builtins.fromJSON (builtins.readFile .secrets/common.json);
     in
     {
       packages = forEachSystem (system: {
@@ -33,15 +34,31 @@
           };
 
           specialArgs = {
-            secrets = pkgs.toJSON (builtins.readFile .secrets/common.json);
+            inherit inputs secrets;
           };
 
-          modules = [
-            ./configuration.nix
-          ];
+          modules = [ ./configuration.nix ];
 
           format = "sd-aarch64";
         };
       });
+
+      nixosConfigurations.picache = nixpkgs.lib.nixosSystem rec {
+        system = "aarch64-linux";
+
+        pkgs = import nixpkgs {
+          inherit system;
+          config.allowUnfree = true;
+        };
+
+        specialArgs = {
+          inherit inputs secrets;
+        };
+
+        modules = [
+          ./configuration.nix
+          ./modules
+        ];
+      };
     };
 }
