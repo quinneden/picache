@@ -7,15 +7,16 @@
       "usbhid"
       "usb_storage"
     ];
+
     loader = {
       grub.enable = false;
       generic-extlinux-compatible.enable = true;
     };
-  };
 
-  extraModprobeConfig = ''
-    options cfg80211 ieee80211_regdom="US"
-  '';
+    extraModprobeConfig = ''
+      options cfg80211 ieee80211_regdom="US"
+    '';
+  };
 
   fileSystems = {
     "/" = {
