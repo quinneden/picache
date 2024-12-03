@@ -7,16 +7,17 @@
       "usb_storage"
     ];
 
-    # loader = {
-    #   grub.enable = false;
-    #   generic-extlinux-compatible.enable = true;
-    # };
-
     loader = {
       timeout = 1;
-      systemd-boot.enable = true;
-      efi.canTouchEfiVariables = true;
+      grub.enable = false;
+      generic-extlinux-compatible.enable = true;
     };
+
+    # loader = {
+    # timeout = 1;
+    # systemd-boot.enable = true;
+    # efi.canTouchEfiVariables = true;
+    # };
 
     # extraModprobeConfig = ''
     #   options cfg80211 ieee80211_regdom="US"
