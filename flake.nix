@@ -2,6 +2,7 @@
   inputs = {
     nixpkgs.url = "nixpkgs/nixos-unstable";
     nix-shell-scripts.url = "github:quinneden/nix-shell-scripts";
+    nixos-hardware.url = "github:NixOS/nixos-hardware/master";
     nixos-generators = {
       url = "github:nix-community/nixos-generators";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -15,6 +16,7 @@
     {
       self,
       nixpkgs,
+      nixos-hardware,
       nixos-generators,
       ...
     }@inputs:
