@@ -30,9 +30,10 @@
     settings.PermitRootLogin = "yes";
   };
 
-  environment.systemPackages = [
+  environment.systemPackages = with pkgs; [
     inputs.nix-shell-scripts.packages.${pkgs.system}.default
-    pkgs.git
+    git-crypt
+    git
   ];
 
   documentation.nixos.enable = false;

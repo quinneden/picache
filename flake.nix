@@ -60,5 +60,26 @@
           ./modules
         ];
       };
+
+      devShells = forEachSystem (
+        system:
+        let
+          pkgs = nixpkgs.legacyPackages.${system};
+          lib = nixpkgs.lib;
+        in
+        {
+          default = pkgs.mkShell {
+            shellHook = ''
+              set -e
+              ${lib.getExe pkgs.nixos-rebuild} switch \
+                --fast --show-trace \
+                --flake .#picache \
+                --target-host "root@10.0.0.101" \
+                --build-host "root@10.0.0.101"
+              exit 0
+            '';
+          };
+        }
+      );
     };
 }
