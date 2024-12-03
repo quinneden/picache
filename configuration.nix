@@ -16,6 +16,9 @@
   networking = {
     hostName = "picache";
 
+    useDHCP = false;
+    interfaces.wlan0.useDHCP = true;
+
     networkmanager.enable = true;
     networkmanager.wifi.backend = "iwd";
 
@@ -23,6 +26,13 @@
       enable = true;
       settings.General.EnableNetworkConfiguration = true;
     };
+  };
+
+  systemd.services.iwd.serviceConfig.Restart = "always";
+
+  hardware = {
+    enableRedistributableFirmware = true;
+    firmware = [ pkgs.wireless-regdb ];
   };
 
   services.openssh = {

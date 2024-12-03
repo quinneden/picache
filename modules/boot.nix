@@ -13,6 +13,10 @@
     };
   };
 
+  extraModprobeConfig = ''
+    options cfg80211 ieee80211_regdom="US"
+  '';
+
   fileSystems = {
     "/" = {
       device = "/dev/disk/by-label/NIXOS_SD";
