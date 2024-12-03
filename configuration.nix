@@ -1,12 +1,24 @@
 {
+  lib,
   pkgs,
   inputs,
   secrets,
-  nixos-hardware,
   ...
 }:
 {
-  imports = [ nixos-hardware.nixosModules.raspberry-pi-4 ];
+  imports = [ inputs.nixos-hardware.nixosModules.raspberry-pi-4 ];
+
+  boot = {
+    kernelPackages = pkgs.linuxKernel.packages.linux_rpi4;
+    supportedFilesystems.zfs = lib.mkForce false;
+    postBootCommands = ''
+      if [[ ! -f /etc/nix/flake.nix ]]; then
+        ${lib.getExe pkgs.git} clone https://github.com/quinneden/picache /etc/nixos
+      else
+        cd /etc/nixos; ${lib.getExe pkgs.git} pull
+      fi
+    '';
+  };
 
   hardware.enableRedistributableFirmware = true;
 
@@ -14,6 +26,14 @@
     enable = true;
     memoryPercent = 200;
   };
+
+  nixpkgs.overlays = [
+    # Workaround: https://github.com/NixOS/nixpkgs/issues/154163
+    # modprobe: FATAL: Module sun4i-drm not found in directory
+    (final: super: {
+      makeModulesClosure = x: super.makeModulesClosure (x // { allowMissing = true; });
+    })
+  ];
 
   users.users.qeden = {
     isNormalUser = true;
@@ -34,7 +54,7 @@
     useDHCP = false;
     interfaces.wlan0.useDHCP = true;
     wireless.networks = {
-      "${secrets.wifi.ssid}".pskRaw = "${secrets.wifi.password}";
+      "${secrets.wifi.ssid}".psk = "${secrets.wifi.password}";
     };
   };
 

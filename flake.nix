@@ -16,7 +16,6 @@
     {
       self,
       nixpkgs,
-      nixos-hardware,
       nixos-generators,
       ...
     }@inputs:
