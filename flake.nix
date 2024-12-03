@@ -6,6 +6,10 @@
       url = "github:nix-community/nixos-generators";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    lix-module = {
+      url = "https://git.lix.systems/lix-project/nixos-module/archive/2.91.1-2.tar.gz";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
   outputs =
     {
@@ -15,11 +19,10 @@
       ...
     }@inputs:
     let
-      systems = [
+      forEachSystem = nixpkgs.lib.genAttrs [
         "aarch64-darwin"
         "aarch64-linux"
       ];
-      forEachSystem = nixpkgs.lib.genAttrs systems;
 
       secrets = builtins.fromJSON (builtins.readFile .secrets/common.json);
     in
@@ -31,6 +34,7 @@
           pkgs = import nixpkgs {
             inherit system;
             config.allowUnfree = true;
+            overlays = [ inputs.lix-module.overlays.default ];
           };
 
           specialArgs = {
@@ -49,6 +53,7 @@
         pkgs = import nixpkgs {
           inherit system;
           config.allowUnfree = true;
+          overlays = [ inputs.lix-module.overlays.default ];
         };
 
         specialArgs = {
