@@ -79,8 +79,7 @@
               ${lib.getExe pkgs.nixos-rebuild} switch \
                 --fast --show-trace \
                 --flake .#picache \
-                --target-host "root@10.0.0.101" \
-                --build-host "root@10.0.0.101"
+                --target-host "root@10.0.0.101"
               exit 0
             '';
           };
