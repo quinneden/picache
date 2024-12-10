@@ -11,13 +11,13 @@
   boot = {
     kernelPackages = pkgs.linuxKernel.packages.linux_rpi4;
     supportedFilesystems.zfs = lib.mkForce false;
-    postBootCommands = ''
-      if [[ ! -f /etc/nix/flake.nix ]]; then
-        ${lib.getExe pkgs.git} clone https://github.com/quinneden/picache /etc/nixos
-      else
-        cd /etc/nixos; ${lib.getExe pkgs.git} pull
-      fi
-    '';
+    # postBootCommands = ''
+    #   if [[ ! -f /etc/nix/flake.nix ]]; then
+    #     ${lib.getExe pkgs.git} clone https://github.com/quinneden/picache /etc/nixos
+    #   else
+    #     cd /etc/nixos; ${lib.getExe pkgs.git} pull
+    #   fi
+    # '';
   };
 
   hardware.enableRedistributableFirmware = true;
@@ -37,14 +37,11 @@
 
   users.users.qeden = {
     isNormalUser = true;
-    initialPassword = "${secrets.defaultUserPassword}";
+    initialPassword = "${secrets.passwords.qeden}";
     extraGroups = [ "wheel" ];
-    openssh.authorizedKeys.keys = [
-      "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJyLtibXqcDXRQ8DzDUbVw71YA+k+L7fH7H3oPYyjFII"
-    ];
   };
 
-  users.users.root.initialPassword = "${secrets.defaultRootPassword}";
+  users.users.root.initialPassword = "${secrets.passwords.root}";
 
   security.sudo.wheelNeedsPassword = false;
 
@@ -56,12 +53,6 @@
     wireless.networks = {
       "${secrets.wifi.ssid}".psk = "${secrets.wifi.password}";
     };
-  };
-
-  programs.ssh.startAgent = true;
-  services.openssh = {
-    enable = true;
-    settings.PermitRootLogin = "yes";
   };
 
   environment.systemPackages = with pkgs; [

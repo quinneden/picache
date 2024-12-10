@@ -2,7 +2,7 @@
 {
   services.nix-serve = {
     enable = true;
-    secretKeyFile = "/var/secrets/cache-private-key.pem";
+    secretKeyFile = "${../.secrets/keys/cache-private-key.pem}";
   };
 
   services.nginx = {

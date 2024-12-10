@@ -25,7 +25,14 @@
         "aarch64-linux"
       ];
 
-      secrets = builtins.fromJSON (builtins.readFile .secrets/common.json);
+      secrets = {
+        cachix = builtins.fromJSON (builtins.readFile .secrets/cachix.json);
+        cloudflare = builtins.fromJSON (builtins.readFile .secrets/cloudflare.json);
+        github = builtins.fromJSON (builtins.readFile .secrets/github.json);
+        passwords = builtins.fromJSON (builtins.readFile .secrets/passwords.json);
+        pubkeys = builtins.fromJSON (builtins.readFile .secrets/pubkeys.json);
+        wifi = builtins.fromJSON (builtins.readFile .secrets/wifi.json);
+      };
     in
     {
       packages = forEachSystem (system: {
@@ -80,7 +87,8 @@
               ${lib.getExe pkgs.nixos-rebuild} switch \
                 --fast --show-trace \
                 --flake .#picache \
-                --target-host "root@10.0.0.101"
+                --target-host "qeden@picache"
+                --use-remote-sudo
               exit 0
             '';
           };
