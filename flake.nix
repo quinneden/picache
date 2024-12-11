@@ -1,12 +1,14 @@
 {
   inputs = {
     nixpkgs.url = "nixpkgs/nixos-unstable";
-    nix-shell-scripts.url = "github:quinneden/nix-shell-scripts";
     nixos-hardware.url = "github:NixOS/nixos-hardware/master";
+    attic.url = "github:zhaofengli/attic";
+
     nixos-generators = {
       url = "github:nix-community/nixos-generators";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+
     lix-module = {
       url = "https://git.lix.systems/lix-project/nixos-module/archive/2.91.1-2.tar.gz";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -25,14 +27,34 @@
         "aarch64-linux"
       ];
 
-      secrets = {
-        cachix = builtins.fromJSON (builtins.readFile .secrets/cachix.json);
-        cloudflare = builtins.fromJSON (builtins.readFile .secrets/cloudflare.json);
-        github = builtins.fromJSON (builtins.readFile .secrets/github.json);
-        passwords = builtins.fromJSON (builtins.readFile .secrets/passwords.json);
-        pubkeys = builtins.fromJSON (builtins.readFile .secrets/pubkeys.json);
-        wifi = builtins.fromJSON (builtins.readFile .secrets/wifi.json);
-      };
+      # secrets = {
+      #   cachix = builtins.fromJSON (builtins.readFile .secrets/cachix.json);
+      #   cloudflare = builtins.fromJSON (builtins.readFile .secrets/cloudflare.json);
+      #   github = builtins.fromJSON (builtins.readFile .secrets/github.json);
+      #   passwords = builtins.fromJSON (builtins.readFile .secrets/passwords.json);
+      #   pubkeys = builtins.fromJSON (builtins.readFile .secrets/pubkeys.json);
+      #   wifi = builtins.fromJSON (builtins.readFile .secrets/wifi.json);
+      # };
+
+      secrets =
+        let
+          inherit (builtins) fromJSON readFile;
+          inherit (nixpkgs) lib;
+        in
+        lib.genAttrs [
+          "cachix"
+          "cloudflare"
+          "github"
+          "minio"
+          "passwords"
+          "pubkeys"
+          "wifi"
+        ] (secretFile: fromJSON (readFile .secrets/${secretFile}.json));
+
+      forAllSystems = inputs.nixpkgs.lib.genAttrs [
+        "aarch64-darwin"
+        "aarch64-linux"
+      ];
     in
     {
       packages = forEachSystem (system: {
@@ -84,12 +106,15 @@
           default = pkgs.mkShell {
             shellHook = ''
               set -e
+
               ${lib.getExe pkgs.nixos-rebuild} switch \
                 --fast --show-trace \
                 --flake .#picache \
-                --target-host "qeden@picache"
-                --use-remote-sudo
-              exit 0
+                --target-host "root@picache"
+
+              ret="$?"
+
+              [[ $ret -eq 0 ]] && exit 0
             '';
           };
         }

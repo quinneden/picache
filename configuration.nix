@@ -47,28 +47,55 @@
 
   networking = {
     hostName = "picache";
-    wireless.enable = true;
     useDHCP = false;
     interfaces.wlan0.useDHCP = true;
-    wireless.networks = {
-      "${secrets.wifi.ssid}".psk = "${secrets.wifi.password}";
+    wireless = {
+      enable = true;
+      networks = {
+        "${secrets.wifi.ssid}".psk = "${secrets.wifi.password}";
+      };
     };
+    # wireless.iwd = {
+    #   enable = true;
+    #   settings = {
+    #     General.EnableNetworkConfiguration = true;
+    #     Settings.AutoConnect = true;
+    #   };
+    #   networks = {
+    #     "${secrets.wifi.ssid}".passphrase = "${secrets.wifi.password}";
+    #   };
+    # };
   };
 
   environment.systemPackages = with pkgs; [
     git
     git-crypt
     gptfdisk
-    micro
   ];
 
   documentation.nixos.enable = false;
 
-  nix.settings = {
-    access-tokens = [ "github=${secrets.github.token}" ];
-    experimental-features = "nix-command flakes";
-    auto-optimise-store = true;
-    warn-dirty = false;
+  nix = {
+    channel.enable = false;
+
+    gc = {
+      automatic = true;
+      dates = "weekly";
+      options = "--delete-older-than 1d";
+    };
+
+    optimise = {
+      automatic = true;
+      dates = [ "daily" ];
+    };
+
+    settings = {
+      access-tokens = [ "github=${secrets.github.token}" ];
+      experimental-features = "nix-command flakes";
+      trusted-users = [ "quinn" ];
+      auto-optimise-store = true;
+      warn-dirty = false;
+    };
   };
 
   system.stateVersion = "25.05";
