@@ -11,13 +11,6 @@
   boot = {
     kernelPackages = pkgs.linuxKernel.packages.linux_rpi4;
     supportedFilesystems.zfs = lib.mkForce false;
-    # postBootCommands = ''
-    #   if [[ ! -f /etc/nix/flake.nix ]]; then
-    #     ${lib.getExe pkgs.git} clone https://github.com/quinneden/picache /etc/nixos
-    #   else
-    #     cd /etc/nixos; ${lib.getExe pkgs.git} pull
-    #   fi
-    # '';
   };
 
   hardware.enableRedistributableFirmware = true;
@@ -60,9 +53,6 @@
     #   settings = {
     #     General.EnableNetworkConfiguration = true;
     #     Settings.AutoConnect = true;
-    #   };
-    #   networks = {
-    #     "${secrets.wifi.ssid}".passphrase = "${secrets.wifi.password}";
     #   };
     # };
   };
