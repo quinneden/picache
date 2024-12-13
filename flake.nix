@@ -27,15 +27,6 @@
         "aarch64-linux"
       ];
 
-      # secrets = {
-      #   cachix = builtins.fromJSON (builtins.readFile .secrets/cachix.json);
-      #   cloudflare = builtins.fromJSON (builtins.readFile .secrets/cloudflare.json);
-      #   github = builtins.fromJSON (builtins.readFile .secrets/github.json);
-      #   passwords = builtins.fromJSON (builtins.readFile .secrets/passwords.json);
-      #   pubkeys = builtins.fromJSON (builtins.readFile .secrets/pubkeys.json);
-      #   wifi = builtins.fromJSON (builtins.readFile .secrets/wifi.json);
-      # };
-
       secrets =
         let
           inherit (builtins) fromJSON readFile;
@@ -103,7 +94,7 @@
           lib = nixpkgs.lib;
         in
         {
-          default = pkgs.mkShell {
+          default = pkgs.mkShellNoCC {
             shellHook = ''
               set -e
 

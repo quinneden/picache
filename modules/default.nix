@@ -1,7 +1,7 @@
 {
   imports = [
     ./binary-cache.nix
-    ./minio.nix
+    # ./samba.nix
     ./boot.nix
     ./ssh.nix
   ];

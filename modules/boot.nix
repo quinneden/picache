@@ -8,7 +8,7 @@
     ];
 
     loader = {
-      timeout = 1;
+      timeout = 0;
       grub.enable = false;
       generic-extlinux-compatible.enable = true;
     };

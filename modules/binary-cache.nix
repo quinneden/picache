@@ -2,6 +2,7 @@
 {
   services.nix-serve = {
     enable = true;
+    package = pkgs.nix-serve-ng;
     secretKeyFile = "/var/cache-private-key.pem";
   };
 
@@ -36,7 +37,7 @@
 
     virtualHosts."picache.qeden.me" = {
       locations."/" = {
-        root = "/var/binary-cache";
+        root = "/nix/store";
         proxyPass = "http://${config.services.nix-serve.bindAddress}:${toString config.services.nix-serve.port}";
         extraConfig = ''
           expires max;
