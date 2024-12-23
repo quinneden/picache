@@ -1,8 +1,8 @@
 {
   inputs = {
     nixpkgs.url = "nixpkgs/nixos-unstable";
-    nixos-hardware.url = "github:NixOS/nixos-hardware/master";
-    attic.url = "github:zhaofengli/attic";
+    # nixos-hardware.url = "github:NixOS/nixos-hardware/master";
+    raspberry-pi-nix.url = "github:nix-community/raspberry-pi-nix";
 
     nixos-generators = {
       url = "github:nix-community/nixos-generators";
