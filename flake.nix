@@ -82,9 +82,7 @@
             runtimeInputs = [ pkgs.nixos-rebuild ];
             text = ''
               nixos-rebuild switch --fast --show-trace \
-                --target-host "qeden@picache" \
-                --use-remote-sudo \
-                --option require-sigs false \
+                --target-host "root@picache" \
                 --flake .#picache
             '';
           };
