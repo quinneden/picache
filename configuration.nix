@@ -6,14 +6,35 @@
   ...
 }:
 {
-  imports = [ inputs.nixos-hardware.nixosModules.raspberry-pi-4 ];
+  imports = [
+    inputs.lix-module.nixosModules.default
+  ];
 
-  boot = {
-    kernelPackages = pkgs.linuxKernel.packages.linux_rpi4;
-    supportedFilesystems.zfs = lib.mkForce false;
+  raspberry-pi-nix = {
+    board = "bcm2711";
   };
 
   hardware.enableRedistributableFirmware = true;
+
+  hardware.raspberry-pi = {
+    config = {
+      pi4 = {
+        options.arm_boost = {
+          enable = true;
+          value = true;
+        };
+      };
+
+      all = {
+        dt-overlays = {
+          disable-bt = {
+            enable = true;
+            params = { };
+          };
+        };
+      };
+    };
+  };
 
   zramSwap = {
     enable = true;
@@ -48,19 +69,15 @@
         "${secrets.wifi.ssid}".psk = "${secrets.wifi.password}";
       };
     };
-    # wireless.iwd = {
-    #   enable = true;
-    #   settings = {
-    #     General.EnableNetworkConfiguration = true;
-    #     Settings.AutoConnect = true;
-    #   };
-    # };
   };
 
   environment.systemPackages = with pkgs; [
     git
     git-crypt
+    cachix
     gptfdisk
+    libraspberrypi
+    raspberrypi-eeprom
   ];
 
   documentation.nixos.enable = false;
@@ -82,6 +99,14 @@
     settings = {
       access-tokens = [ "github=${secrets.github.token}" ];
       experimental-features = "nix-command flakes";
+      extra-substituters = [
+        "https://nix-community.cachix.org"
+        "ssh://quinn@10.0.0.39"
+      ];
+      extra-trusted-public-keys = [
+        "nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs="
+        "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJyLtibXqcDXRQ8DzDUbVw71YA+k+L7fH7H3oPYyjFII"
+      ];
       trusted-users = [ "quinn" ];
       auto-optimise-store = true;
       warn-dirty = false;

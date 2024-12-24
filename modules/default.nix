@@ -1,8 +1,8 @@
 {
   imports = [
-    ./binary-cache.nix
+    # ./binary-cache.nix
     # ./samba.nix
-    ./boot.nix
+    # ./boot.nix
     ./ssh.nix
   ];
 }
