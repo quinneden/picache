@@ -6,9 +6,7 @@
   ...
 }:
 {
-  imports = [
-    inputs.lix-module.nixosModules.default
-  ];
+  imports = [ ./modules ];
 
   raspberry-pi-nix = {
     board = "bcm2711";
@@ -101,13 +99,14 @@
       experimental-features = "nix-command flakes";
       extra-substituters = [
         "https://nix-community.cachix.org"
-        "ssh://quinn@10.0.0.39"
+        "ssh-ng://quinn@10.0.0.53"
       ];
       extra-trusted-public-keys = [
         "nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs="
         "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJyLtibXqcDXRQ8DzDUbVw71YA+k+L7fH7H3oPYyjFII"
+        "picache.qeden.me:dPY35v/IUBxv06+U7W1wlrWHo/9m7X5Ogq88RMuwKkQ="
       ];
-      trusted-users = [ "quinn" ];
+      trusted-users = [ "qeden" ];
       auto-optimise-store = true;
       warn-dirty = false;
     };

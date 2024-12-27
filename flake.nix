@@ -1,13 +1,7 @@
 {
   inputs = {
     nixpkgs.url = "nixpkgs/nixos-unstable";
-    nixos-hardware.url = "github:NixOS/nixos-hardware/master";
     raspberry-pi-nix.url = "github:nix-community/raspberry-pi-nix";
-
-    # nixos-generators = {
-    #   url = "github:nix-community/nixos-generators";
-    #   inputs.nixpkgs.follows = "nixpkgs";
-    # };
 
     lix-module = {
       url = "https://git.lix.systems/lix-project/nixos-module/archive/2.91.1-2.tar.gz";
@@ -16,9 +10,10 @@
   };
   outputs =
     {
-      self,
+      lix-module,
       nixpkgs,
-      # nixos-generators,
+      raspberry-pi-nix,
+      self,
       ...
     }@inputs:
     let
@@ -64,10 +59,10 @@
         };
 
         modules = [
-          inputs.raspberry-pi-nix.nixosModules.raspberry-pi
-          inputs.raspberry-pi-nix.nixosModules.sd-image
           ./configuration.nix
-          ./modules
+          lix-module.nixosModules.default
+          raspberry-pi-nix.nixosModules.raspberry-pi
+          raspberry-pi-nix.nixosModules.sd-image
         ];
       };
 
@@ -96,34 +91,12 @@
           };
         }
       );
-
-      #       devShells = forEachSystem (
-      #         system:
-      #         let
-      #           pkgs = nixpkgs.legacyPackages.${system};
-      #           lib = nixpkgs.lib;
-      #         in
-      #         {
-      #           default = pkgs.mkShellNoCC {
-      #             shellHook = ''
-      #                     set -e
-      #
-      #               ${lib.getExe pkgs.nixos-rebuild} switch \
-      #                 --fast --show-trace \
-      #                 --flake .#picache \
-      #                 --target-host "root@picache"
-      #
-      #               ret="$?"
-      #
-      #               [[ $ret -eq 0 ]] && exit 0
-      #             '';
-      #           };
-      #         }
-      #       );
     };
 
   nixConfig = {
-    extra-substituters = [ "https://nix-community.cachix.org" ];
+    extra-substituters = [
+      "https://nix-community.cachix.org"
+    ];
     extra-trusted-public-keys = [
       "nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs="
     ];
