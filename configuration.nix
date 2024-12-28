@@ -1,12 +1,10 @@
 {
   lib,
   pkgs,
-  inputs,
   secrets,
   ...
 }:
 {
-  imports = [ ./modules ];
 
   raspberry-pi-nix = {
     board = "bcm2711";
@@ -24,6 +22,17 @@
       };
 
       all = {
+        base-dt-params = {
+          BOOT_UART = {
+            value = 1;
+            enable = true;
+          };
+          uart_2ndstage = {
+            value = 1;
+            enable = true;
+          };
+        };
+
         dt-overlays = {
           disable-bt = {
             enable = true;

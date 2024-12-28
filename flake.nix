@@ -39,30 +39,42 @@
     in
     {
       packages = forEachSystem (system: {
+        date = builtins.readFile (pkgs.runCommand "" { } "printf `date +%Y-%m-%d` > $out");
         image =
           let
-            config = self.nixosConfigurations.picache.config;
+            image-config = nixpkgs.lib.nixosSystem {
+              system = "aarch64-linux";
+              specialArgs = { inherit inputs secrets; };
+              modules = [
+                lix-module.nixosModules.default
+                raspberry-pi-nix.nixosModules.raspberry-pi
+                raspberry-pi-nix.nixosModules.sd-image
+                ./configuration.nix
+                ./modules/ssh.nix
+              ];
+            };
+            config = image-config.config;
           in
-          config.system.build.sdImage.overrideAttrs { compressImage = false; };
+          config.system.build.sdImage.overrideAttrs {
+            compressImage = false;
+            imageName = "picache-${date}.img";
+          };
       });
 
       nixosConfigurations.picache = nixpkgs.lib.nixosSystem rec {
         system = "aarch64-linux";
+        specialArgs = { inherit inputs secrets; };
 
         pkgs = import nixpkgs {
           inherit system;
           config.allowUnfree = true;
         };
 
-        specialArgs = {
-          inherit inputs secrets;
-        };
-
         modules = [
-          ./configuration.nix
           lix-module.nixosModules.default
           raspberry-pi-nix.nixosModules.raspberry-pi
-          raspberry-pi-nix.nixosModules.sd-image
+          ./configuration.nix
+          ./modules
         ];
       };
 
