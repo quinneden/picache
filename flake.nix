@@ -39,7 +39,6 @@
     in
     {
       packages = forEachSystem (system: {
-        date = builtins.readFile (pkgs.runCommand "" { } "printf `date +%Y-%m-%d` > $out");
         image =
           let
             image-config = nixpkgs.lib.nixosSystem {
@@ -55,10 +54,7 @@
             };
             config = image-config.config;
           in
-          config.system.build.sdImage.overrideAttrs {
-            compressImage = false;
-            imageName = "picache-${date}.img";
-          };
+          config.system.build.sdImage.overrideAttrs { compressImage = false; };
       });
 
       nixosConfigurations.picache = nixpkgs.lib.nixosSystem rec {
