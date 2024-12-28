@@ -1,6 +1,7 @@
 {
   imports = [
-    # ./binary-cache.nix
+    ./binary-cache.nix
+    ./hardware-configuration.nix
     ./ssh.nix
   ];
 }
