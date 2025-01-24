@@ -1,53 +1,9 @@
 {
-  lib,
   pkgs,
   secrets,
   ...
 }:
 {
-
-  raspberry-pi-nix = {
-    board = "bcm2711";
-  };
-
-  hardware.enableRedistributableFirmware = true;
-
-  hardware.raspberry-pi = {
-    config = {
-      pi4 = {
-        options.arm_boost = {
-          enable = true;
-          value = true;
-        };
-      };
-
-      all = {
-        base-dt-params = {
-          BOOT_UART = {
-            value = 1;
-            enable = true;
-          };
-          uart_2ndstage = {
-            value = 1;
-            enable = true;
-          };
-        };
-
-        dt-overlays = {
-          disable-bt = {
-            enable = true;
-            params = { };
-          };
-        };
-      };
-    };
-  };
-
-  zramSwap = {
-    enable = true;
-    memoryPercent = 200;
-  };
-
   nixpkgs.overlays = [
     # Workaround: https://github.com/NixOS/nixpkgs/issues/154163
     # modprobe: FATAL: Module sun4i-drm not found in directory
@@ -60,6 +16,7 @@
     isNormalUser = true;
     initialPassword = "${secrets.passwords.qeden}";
     extraGroups = [ "wheel" ];
+    shell = pkgs.zsh;
   };
 
   users.users.root.initialPassword = "${secrets.passwords.root}";
@@ -79,12 +36,15 @@
   };
 
   environment.systemPackages = with pkgs; [
+    eza
+    fzf
     git
     git-crypt
     cachix
     gptfdisk
     libraspberrypi
     raspberrypi-eeprom
+    zoxide
   ];
 
   documentation.nixos.enable = false;
@@ -108,13 +68,11 @@
       experimental-features = "nix-command flakes";
       extra-substituters = [
         "https://nix-community.cachix.org"
-        "ssh-ng://quinn@10.0.0.53"
       ];
       extra-trusted-public-keys = [
         "nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs="
-        "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJyLtibXqcDXRQ8DzDUbVw71YA+k+L7fH7H3oPYyjFII"
-        "picache.qeden.me:dPY35v/IUBxv06+U7W1wlrWHo/9m7X5Ogq88RMuwKkQ="
       ];
+      secret-key-files = /var/picache-secret-key-1.pem;
       trusted-users = [ "qeden" ];
       auto-optimise-store = true;
       warn-dirty = false;
