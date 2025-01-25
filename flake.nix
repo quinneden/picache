@@ -1,23 +1,15 @@
 {
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
-    nixos-anywhere.url = "github:nix-community/nixos-anywhere";
-    nixos-images.url = "github:nix-community/nixos-images";
     raspberry-pi-nix.url = "github:nix-community/raspberry-pi-nix";
 
     lix-module = {
       url = "https://git.lix.systems/lix-project/nixos-module/archive/2.91.1-2.tar.gz";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-
-    disko = {
-      url = "github:nix-community/disko/latest";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
   };
   outputs =
     {
-      disko,
       lix-module,
       nixpkgs,
       raspberry-pi-nix,
@@ -29,10 +21,20 @@
 
       forEachSystem =
         function:
-        genAttrs [
-          "aarch64-darwin"
-          "aarch64-linux"
-        ] (system: function { pkgs = import nixpkgs { inherit system; }; });
+        genAttrs
+          [
+            "aarch64-darwin"
+            "aarch64-linux"
+          ]
+          (
+            system:
+            function {
+              pkgs = import nixpkgs {
+                inherit system;
+                config.allowUnfree = true;
+              };
+            }
+          );
 
       secrets =
         let
@@ -48,37 +50,28 @@
         ] (secretFile: fromJSON (readFile .secrets/${secretFile}.json));
     in
     {
+      nixosModules = rec {
+        default = ext4-image;
+        ext4-image = ./nixosModules/ext4-image;
+        btrfs-image = ./nixosModules/btrfs-image;
+      };
+
       packages = forEachSystem (
         { pkgs }:
         {
           image =
             let
-              image-config = nixosSystem {
-                system = "aarch64-linux";
-
-                specialArgs = { inherit inputs secrets; };
-
-                modules = [
-                  lix-module.nixosModules.default
-                  raspberry-pi-nix.nixosModules.raspberry-pi
-                  raspberry-pi-nix.nixosModules.sd-image
-                  ./configuration.nix
-                  ./modules/ssh.nix
-                  ./modules/hardware.nix
-                  ./modules/zsh.nix
-                ];
-              };
-
-              config = image-config.config;
+              inherit (self.nixosConfigurations.picache.config.system.build) sdImage;
             in
-            config.system.build.sdImage.overrideAttrs { compressImage = false; };
+            sdImage.overrideAttrs {
+              compressImage = false;
+              rootPartitionUUID = "365a6beb-a072-4b92-96c4-cc39fff11918";
+            };
         }
       );
 
       nixosConfigurations.picache = nixosSystem {
-        specialArgs = {
-          inherit inputs secrets;
-        };
+        specialArgs = { inherit inputs secrets; };
 
         pkgs = import nixpkgs {
           system = "aarch64-linux";
@@ -88,9 +81,8 @@
         modules = [
           lix-module.nixosModules.lixFromNixpkgs
           raspberry-pi-nix.nixosModules.raspberry-pi
-          disko.nixosModules.default
+          self.nixosModules.default
           ./configuration.nix
-          ./modules
         ];
       };
 
@@ -99,7 +91,7 @@
         rec {
           default = deploy;
           deploy = import ./apps/deploy.nix { inherit pkgs; };
-          install = import ./apps/install.nix { inherit inputs pkgs; };
+          write-to-disk = import ./apps/write-to-disk.nix { inherit inputs pkgs self; };
         }
       );
     };

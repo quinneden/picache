@@ -4,6 +4,12 @@
   ...
 }:
 {
+  imports = [
+    ./modules/ssh.nix
+    ./modules/rpi.nix
+    ./modules/zsh.nix
+  ];
+
   nixpkgs.overlays = [
     # Workaround: https://github.com/NixOS/nixpkgs/issues/154163
     # modprobe: FATAL: Module sun4i-drm not found in directory
@@ -26,7 +32,11 @@
   networking = {
     hostName = "picache";
     useDHCP = false;
-    interfaces.wlan0.useDHCP = true;
+    interfaces = {
+      wlan0.useDHCP = true;
+      end0.useDHCP = true;
+    };
+
     wireless = {
       enable = true;
       networks = {
@@ -36,14 +46,20 @@
   };
 
   environment.systemPackages = with pkgs; [
+    btrfs-progs
+    cachix
     eza
+    fd
     fzf
     git
     git-crypt
-    cachix
+    gnupg
+    gptfdisk
     gptfdisk
     libraspberrypi
+    micro
     raspberrypi-eeprom
+    ripgrep
     zoxide
   ];
 
