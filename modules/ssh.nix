@@ -10,7 +10,7 @@ in
   services.openssh = {
     enable = true;
     settings = {
-      PasswordAuthentication = true;
+      PasswordAuthentication = false;
       PermitRootLogin = "prohibit-password";
     };
   };
@@ -19,18 +19,13 @@ in
     knownHosts = {
       macmini-m4 = {
         hostNames = [ "10.0.0.53" ];
-        publicKey = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJyLtibXqcDXRQ8DzDUbVw71YA+k+L7fH7H3oPYyjFII";
+        publicKey = pubkeys.macMini.host;
       };
     };
   };
 
-  users.users.root.openssh.authorizedKeys.keys = [
-    pubkeys.macMini.host
-    pubkeys.macMini.user
-  ];
-
-  users.users.qeden.openssh.authorizedKeys.keys = [
-    pubkeys.macMini.host
-    pubkeys.macMini.user
-  ];
+  users.users = {
+    root.openssh.authorizedKeys.keys = [ pubkeys.macMini.user ];
+    qeden.openssh.authorizedKeys.keys = [ pubkeys.macMini.user ];
+  };
 }

@@ -1,4 +1,5 @@
 .DS_Store
 result
-scripts
+scripts/btrfs.sh
+scripts/flash.sh
 *.img

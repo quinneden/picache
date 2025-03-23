@@ -1,27 +1,37 @@
 {
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
+    nixos-hardware.url = "github:NixOS/nixos-hardware/master";
     raspberry-pi-nix.url = "github:nix-community/raspberry-pi-nix";
 
     lix-module = {
-      url = "https://git.lix.systems/lix-project/nixos-module/archive/2.91.1-2.tar.gz";
+      url = "https://git.lix.systems/lix-project/nixos-module/archive/2.92.0-1.tar.gz";
       inputs.nixpkgs.follows = "nixpkgs";
+    };
+
+    sops-nix = {
+      url = "github:mic92/sops-nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
+    secrets = {
+      url = "git+ssh://git@github.com/quinneden/secrets.git?ref=main&shallow=1";
+      inputs = { };
     };
   };
   outputs =
     {
       lix-module,
       nixpkgs,
-      raspberry-pi-nix,
       self,
       ...
     }@inputs:
     let
-      inherit (nixpkgs.lib) genAttrs nixosSystem;
+      inherit (nixpkgs) lib;
 
       forEachSystem =
         function:
-        genAttrs
+        lib.genAttrs
           [
             "aarch64-darwin"
             "aarch64-linux"
@@ -35,43 +45,23 @@
               };
             }
           );
-
-      secrets =
-        let
-          inherit (builtins) fromJSON readFile;
-        in
-        genAttrs [
-          "cachix"
-          "cloudflare"
-          "github"
-          "passwords"
-          "pubkeys"
-          "wifi"
-        ] (secretFile: fromJSON (readFile .secrets/${secretFile}.json));
     in
     {
-      nixosModules = rec {
-        default = ext4-image;
-        ext4-image = ./nixosModules/ext4-image;
-        btrfs-image = ./nixosModules/btrfs-image;
-      };
-
       packages = forEachSystem (
         { pkgs }:
         {
           image =
             let
-              inherit (self.nixosConfigurations.picache.config.system.build) sdImage;
+              inherit (self.nixosConfigurations.picache) config;
             in
-            sdImage.overrideAttrs {
-              compressImage = false;
-              rootPartitionUUID = "365a6beb-a072-4b92-96c4-cc39fff11918";
-            };
+            config.system.build.btrfsImage;
+
+          writeToDisk = pkgs.callPackage ./scripts/write-to-disk.nix { inherit lib; };
         }
       );
 
-      nixosConfigurations.picache = nixosSystem {
-        specialArgs = { inherit inputs secrets; };
+      nixosConfigurations.picache = lib.nixosSystem {
+        specialArgs = { inherit inputs lib; };
 
         pkgs = import nixpkgs {
           system = "aarch64-linux";
@@ -80,8 +70,9 @@
 
         modules = [
           lix-module.nixosModules.lixFromNixpkgs
-          raspberry-pi-nix.nixosModules.raspberry-pi
-          self.nixosModules.default
+          # raspberry-pi-nix.nixosModules.raspberry-pi
+          inputs.nixos-hardware.nixosModules.raspberry-pi-4
+          inputs.sops-nix.nixosModules.sops
           ./configuration.nix
         ];
       };
@@ -91,7 +82,6 @@
         rec {
           default = deploy;
           deploy = import ./apps/deploy.nix { inherit pkgs; };
-          write-to-disk = import ./apps/write-to-disk.nix { inherit inputs pkgs self; };
         }
       );
     };

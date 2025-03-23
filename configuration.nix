@@ -1,12 +1,15 @@
 {
+  config,
+  inputs,
   pkgs,
-  secrets,
   ...
 }:
 {
   imports = [
     ./modules/ssh.nix
     ./modules/rpi.nix
+    ./modules/sops.nix
+    ./modules/hardware.nix
     ./modules/zsh.nix
   ];
 
@@ -18,14 +21,37 @@
     })
   ];
 
+  boot.postBootCommands = with pkgs; ''
+    set -Eeuf -o pipefail
+
+    if [ -f /nix-path-registration ]; then
+      rootPart=$(${pkgs.util-linux}/bin/findmnt -nvo SOURCE /)
+      firmwareDevice=$(lsblk -npo PKNAME $rootPart)
+      partNum=$(
+        lsblk -npo MAJ:MIN "$rootPart" |
+        ${gawk}/bin/awk -F: '{print $2}' |
+        tr -d '[:space:]'
+      )
+
+      echo ',+,' | sfdisk -N"$partNum" --no-reread "$firmwareDevice"
+      ${parted}/bin/partprobe
+      ${btrfs-progs}/bin/btrfs filesystem resize max /
+
+      # Register the contents of the initial Nix store
+      ${config.nix.package.out}/bin/nix-store --load-db < /nix-path-registration
+
+      rm -f /nix-path-registration
+    fi
+  '';
+
   users.users.qeden = {
     isNormalUser = true;
-    initialPassword = "${secrets.passwords.qeden}";
+    passwordFile = config.sops.secrets."passwords/quinn".path;
     extraGroups = [ "wheel" ];
     shell = pkgs.zsh;
   };
 
-  users.users.root.initialPassword = "${secrets.passwords.root}";
+  users.users.root.passwordFile = config.sops.secrets."passwords/root".path;
 
   security.sudo.wheelNeedsPassword = false;
 
@@ -40,7 +66,7 @@
     wireless = {
       enable = true;
       networks = {
-        "${secrets.wifi.ssid}".psk = "${secrets.wifi.password}";
+        ${inputs.secrets.wifi.ssid}.psk = inputs.secrets.wifi.password;
       };
     };
   };
@@ -80,7 +106,7 @@
     };
 
     settings = {
-      access-tokens = [ "github=${secrets.github.token}" ];
+      access-tokens = [ "github=@${config.sops.secrets.github_token.path}" ];
       experimental-features = "nix-command flakes";
       extra-substituters = [
         "https://nix-community.cachix.org"
@@ -96,4 +122,8 @@
   };
 
   system.stateVersion = "25.05";
+
+  system.build.btrfsImage = import ./lib/make-btrfs-disk-image.nix {
+    inherit config pkgs;
+  };
 }
