@@ -1,5 +1,3 @@
 .DS_Store
 result
-scripts/btrfs.sh
-scripts/flash.sh
 *.img

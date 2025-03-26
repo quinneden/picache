@@ -1,16 +1,10 @@
 {
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
-    nixos-hardware.url = "github:NixOS/nixos-hardware/master";
     raspberry-pi-nix.url = "github:nix-community/raspberry-pi-nix";
 
     lix-module = {
-      url = "https://git.lix.systems/lix-project/nixos-module/archive/2.92.0-1.tar.gz";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
-
-    sops-nix = {
-      url = "github:mic92/sops-nix";
+      url = "https://git.lix.systems/lix-project/nixos-module/archive/2.92.0-2.tar.gz";
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
@@ -18,10 +12,14 @@
       url = "git+ssh://git@github.com/quinneden/secrets.git?ref=main&shallow=1";
       inputs = { };
     };
+
+    sops-nix = {
+      url = "github:mic92/sops-nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
   outputs =
     {
-      lix-module,
       nixpkgs,
       self,
       ...
@@ -30,7 +28,7 @@
       inherit (nixpkgs) lib;
 
       forEachSystem =
-        function:
+        f:
         lib.genAttrs
           [
             "aarch64-darwin"
@@ -38,10 +36,10 @@
           ]
           (
             system:
-            function {
+            f {
               pkgs = import nixpkgs {
                 inherit system;
-                config.allowUnfree = true;
+                overlays = [ self.overlays.default ];
               };
             }
           );
@@ -50,50 +48,43 @@
       packages = forEachSystem (
         { pkgs }:
         {
-          image =
+          sdImage =
             let
-              inherit (self.nixosConfigurations.picache) config;
+              imageConfig = self.nixosConfigurations.picache.extendModules {
+                modules = [ inputs.raspberry-pi-nix.nixosModules.sd-image ];
+              };
             in
-            config.system.build.btrfsImage;
+            imageConfig.config.system.build.sdImage;
 
-          writeToDisk = pkgs.callPackage ./scripts/write-to-disk.nix { inherit lib; };
+          deploy = pkgs.callPackage ./scripts/deploy.nix { };
+
+          rpi4-uefi-firmware-images = pkgs.callPackage ./pkgs/rpi4-uefi-firmware-images.nix { };
         }
       );
 
       nixosConfigurations.picache = lib.nixosSystem {
-        specialArgs = { inherit inputs lib; };
-
-        pkgs = import nixpkgs {
-          system = "aarch64-linux";
-          config.allowUnfree = true;
+        system = "aarch64-linux";
+        specialArgs = {
+          inherit inputs lib;
+          pubkeys = import ./pubkeys.nix;
         };
-
-        modules = [
-          lix-module.nixosModules.lixFromNixpkgs
-          # raspberry-pi-nix.nixosModules.raspberry-pi
-          inputs.nixos-hardware.nixosModules.raspberry-pi-4
-          inputs.sops-nix.nixosModules.sops
-          ./configuration.nix
-        ];
+        modules = [ ./config ];
       };
 
-      apps = forEachSystem (
-        { pkgs, ... }:
-        rec {
-          default = deploy;
-          deploy = import ./apps/deploy.nix { inherit pkgs; };
-        }
-      );
+      overlays = {
+        default = final: prev: {
+          rpi4-uefi-firmware-images = prev.callPackage ./pkgs/rpi4-uefi-firmware-images.nix { };
+        };
+      };
     };
 
   nixConfig = {
     extra-substituters = [
+      "ssh-ng://nix-ssh@picache"
       "https://nix-community.cachix.org"
-      "https://quinneden.cachix.org"
     ];
     extra-trusted-public-keys = [
       "nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs="
-      "quinneden.cachix.org-1:1iSAVU2R8SYzxTv3Qq8j6ssSPf0Hz+26gfgXkvlcbuA="
     ];
   };
 }

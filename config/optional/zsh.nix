@@ -1,3 +1,4 @@
+{ pkgs, ... }:
 let
   shellAliases = {
     gst = "git status";
@@ -10,11 +11,8 @@ let
   };
 in
 {
-  imports = [ ./pure-prompt.nix ];
-
   programs.zsh = {
     enable = true;
-    pure-prompt.enable = true;
     shellAliases = shellAliases;
     enableCompletion = true;
     autosuggestions.enable = true;
@@ -34,6 +32,12 @@ in
       if type zoxide &>/dev/null; then eval "$(zoxide init zsh)"; fi
       if type z &>/dev/null; then alias cd='z'; fi
       [[ -f $HOME/.hushlogin ]] || touch "$HOME"/.hushlogin
+    '';
+
+    promptInit = ''
+      fpath+=(${pkgs.pure-prompt}/share/zsh/site-functions)
+      autoload -U promptinit; promptinit
+      prompt pure
     '';
   };
 
