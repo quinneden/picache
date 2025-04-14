@@ -1,13 +1,14 @@
-{ pkgs, ... }:
+{ nixos-rebuild-ng, writeShellApplication, ... }:
 
-pkgs.writeShellApplication {
-  name = "deploy";
-  runtimeInputs = [ pkgs.nixos-rebuild-ng ];
+writeShellApplication {
+  name = "deploy-picache";
+  runtimeInputs = [ nixos-rebuild-ng ];
   text = ''
     nixos-rebuild-ng switch \
-      --no-reexec \
       --flake .#picache \
+      --no-reexec \
       --show-trace \
-      --target-host "root@picache"
+      --sudo \
+      --target-host "qeden@picache"
   '';
 }

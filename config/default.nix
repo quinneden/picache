@@ -1,12 +1,16 @@
 {
+  config,
   inputs,
+  lib,
   pkgs,
   pubkeys,
+  self,
   ...
 }:
 {
   imports = [
     ./core
+    ./optional/tailscale.nix
     ./optional/time-machine.nix
     ./optional/zsh.nix
     inputs.lix-module.nixosModules.default
@@ -23,9 +27,10 @@
   nixpkgs = {
     overlays = [
       # Workaround: https://github.com/NixOS/nixpkgs/issues/154163
-      (final: super: {
-        makeModulesClosure = x: super.makeModulesClosure (x // { allowMissing = true; });
-      })
+      # (final: super: {
+      #   makeModulesClosure = x: super.makeModulesClosure (x // { allowMissing = true; });
+      # })
+      self.overlays.default
     ];
   };
 
@@ -67,14 +72,14 @@
     gc = {
       automatic = true;
       dates = "weekly";
-      options = "--delete-older-than 1d";
+      options = "--delete-older-than 7d";
     };
     optimise = {
       automatic = true;
       dates = [ "daily" ];
     };
     settings = {
-      access-tokens = [ "github=${inputs.secrets.git.token}" ];
+      access-tokens = [ "github=@${config.sops.secrets.github_token.path}" ];
       auto-optimise-store = true;
       experimental-features = [
         "nix-command"
@@ -96,6 +101,10 @@
       protocol = "ssh-ng";
       write = true;
     };
+  };
+
+  system.build.diskImage = import ../lib/make-disk-image.nix {
+    inherit config lib pkgs;
   };
 
   system.stateVersion = "25.05";

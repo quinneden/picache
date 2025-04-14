@@ -2,7 +2,7 @@
 
 pkgs.stdenv.mkDerivation {
   pname = "rpi4-uefi-firmware-images";
-  version = "v1.41";
+  version = "1.41";
 
   src = pkgs.fetchzip {
     url = "https://github.com/pftf/RPi4/releases/download/v1.41/RPi4_UEFI_Firmware_v1.41.zip";

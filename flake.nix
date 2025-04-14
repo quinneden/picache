@@ -4,7 +4,7 @@
     raspberry-pi-nix.url = "github:nix-community/raspberry-pi-nix";
 
     lix-module = {
-      url = "https://git.lix.systems/lix-project/nixos-module/archive/2.92.0-2.tar.gz";
+      url = "https://git.lix.systems/lix-project/nixos-module/archive/2.92.0-3.tar.gz";
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
@@ -25,62 +25,51 @@
       ...
     }@inputs:
     let
-      inherit (nixpkgs) lib;
+      lib = nixpkgs.lib.extend (self: super: { custom = import ./lib { inherit (nixpkgs) lib; }; });
 
       forEachSystem =
         f:
-        lib.genAttrs
-          [
-            "aarch64-darwin"
-            "aarch64-linux"
-          ]
-          (
-            system:
-            f {
-              pkgs = import nixpkgs {
-                inherit system;
-                overlays = [ self.overlays.default ];
-              };
-            }
-          );
+        lib.genAttrs [ "aarch64-darwin" "aarch64-linux" ] (
+          system:
+          f {
+            pkgs = import nixpkgs {
+              inherit system;
+              overlays = [ self.overlays.default ];
+            };
+          }
+        );
     in
     {
       packages = forEachSystem (
         { pkgs }:
-        {
-          sdImage =
-            let
-              imageConfig = self.nixosConfigurations.picache.extendModules {
-                modules = [ inputs.raspberry-pi-nix.nixosModules.sd-image ];
-              };
-            in
-            imageConfig.config.system.build.sdImage;
-
+        rec {
+          default = deploy;
           deploy = pkgs.callPackage ./scripts/deploy.nix { };
-
-          rpi4-uefi-firmware-images = pkgs.callPackage ./pkgs/rpi4-uefi-firmware-images.nix { };
+          diskImage = self.nixosConfigurations.picache.config.system.build.diskImage;
         }
       );
 
       nixosConfigurations.picache = lib.nixosSystem {
         system = "aarch64-linux";
         specialArgs = {
-          inherit inputs lib;
+          inherit inputs lib self;
           pubkeys = import ./pubkeys.nix;
         };
         modules = [ ./config ];
       };
 
       overlays = {
-        default = final: prev: {
-          rpi4-uefi-firmware-images = prev.callPackage ./pkgs/rpi4-uefi-firmware-images.nix { };
-        };
+        default =
+          final: prev:
+          prev.lib.packagesFromDirectoryRecursive {
+            callPackage = prev.lib.callPackageWith final;
+            directory = ./pkgs;
+          };
       };
     };
 
   nixConfig = {
     extra-substituters = [
-      "ssh-ng://nix-ssh@picache"
       "https://nix-community.cachix.org"
     ];
     extra-trusted-public-keys = [

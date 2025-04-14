@@ -24,7 +24,7 @@ parted -a optimal "$targetDisk" -- mkpart ESP fat32 1MiB 513MiB
 parted -a optimal "$targetDisk" -- set 1 esp on
 parted -a optimal "$targetDisk" -- mkpart primary 513MiB 100%
 
-mkfs.fat -F 32 -n boot ${targetDisk}1
+mkfs.fat -F 32 -n boot "${targetDisk}1"
 mkfs.btrfs -L "nixos" "${targetDisk}2"
 
 mkdir -p /mnt
@@ -49,6 +49,6 @@ mount "${targetDisk}1" /mnt/boot
 
 nixos-generate-config --root /mnt --show-hardware-config | tee hardware.nix
 
-wget https://github.com/pftf/RPi4/releases/download/v1.41/RPi4_UEFI_Firmware_v1.41.zip
+wget "https://github.com/pftf/RPi4/releases/download/v1.41/RPi4_UEFI_Firmware_v1.41.zip"
 unzip -d /mnt/boot "RPi4_UEFI_Firmware_*.zip" -x "*.md"
 rm RPi4_UEFI_Firmware_*.zip

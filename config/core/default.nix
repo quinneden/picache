@@ -1,6 +1,4 @@
+{ lib, ... }:
 {
-  imports = [
-    ./ssh.nix
-    ./hardware-configuration.nix
-  ];
+  imports = lib.custom.scanPaths ./.;
 }
