@@ -27,25 +27,12 @@
           writeable = "yes";
           "force user" = "time-machine";
           "fruit:aapl" = "yes";
+          "fruit:model" = "MacSamba";
           "fruit:time machine" = "yes";
+          "readdir_attr:aapl_max_access" = "no";
           "vfs objects" = "catia fruit streams_xattr";
         };
       };
     };
-  };
-
-  networking.firewall = {
-    enable = true;
-    allowedTCPPorts = [
-      139
-      445
-      548
-      636
-    ];
-    allowedUDPPorts = [
-      137
-      138
-    ];
-    allowPing = true;
   };
 }

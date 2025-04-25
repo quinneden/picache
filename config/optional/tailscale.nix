@@ -1,7 +1,7 @@
 { config, ... }:
 {
   services.tailscale = {
-    enable = false;
+    enable = true;
     openFirewall = true;
     authKeyFile = config.sops.secrets."tailscale_auth_keys/picache".path;
     authKeyParameters.preauthorized = true;

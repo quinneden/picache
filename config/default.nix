@@ -10,7 +10,7 @@
 {
   imports = [
     ./core
-    ./optional/tailscale.nix
+    # ./optional/tailscale.nix
     ./optional/time-machine.nix
     ./optional/zsh.nix
     inputs.lix-module.nixosModules.default
@@ -25,13 +25,7 @@
   };
 
   nixpkgs = {
-    overlays = [
-      # Workaround: https://github.com/NixOS/nixpkgs/issues/154163
-      # (final: super: {
-      #   makeModulesClosure = x: super.makeModulesClosure (x // { allowMissing = true; });
-      # })
-      self.overlays.default
-    ];
+    overlays = [ self.overlays.default ];
   };
 
   zramSwap = {
