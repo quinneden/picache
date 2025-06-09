@@ -1,11 +1,11 @@
 {
   config,
-  diskSize ? "auto",
-  bootSize ? "512M",
   lib,
+  pkgs,
+  bootSize ? "512M",
+  diskSize ? "auto",
   memSize ? 4096,
   name ? "picache-nixos-${lib.versions.majorMinor lib.version}-btrfs-image",
-  pkgs,
   uuid ? "FD3C6289-A02A-43B1-9399-86B7EB444980",
 }:
 let

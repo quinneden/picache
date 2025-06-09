@@ -30,7 +30,7 @@
 
   zramSwap = {
     enable = true;
-    memoryPercent = 200;
+    memoryPercent = 600;
   };
 
   users.users.qeden = {
@@ -49,7 +49,6 @@
     fd
     fzf
     git
-    git-crypt
     gnupg
     gptfdisk
     libraspberrypi
